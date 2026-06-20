@@ -1,11 +1,23 @@
 import { Request, Response } from 'express';
 import { TeamService } from '../services/team.service';
+import { createTeamSchema } from '../../../Shared/validations';
 
 const teamService = new TeamService();
 
 export class TeamController {
   async create(req: Request, res: Response) {
     try {
+      const validation = createTeamSchema.safeParse(req.body);
+      
+            if (!validation.success) {
+              return res.status(400).json({
+                error: { 
+                  code: 'VALIDATION_ERROR', 
+                  message: validation.error.issues[0].message 
+                },
+              });
+            }
+
       const { name, colorHex, description } = req.body;
 
       if (!name || !colorHex) {
@@ -96,6 +108,17 @@ export class TeamController {
 
   async update(req: Request, res: Response) {
     try {
+      const validation = createTeamSchema.safeParse(req.body);
+      
+            if (!validation.success) {
+              return res.status(400).json({
+                error: { 
+                  code: 'VALIDATION_ERROR', 
+                  message: validation.error.issues[0].message 
+                },
+              });
+            }
+            
       const id = String(req.params.id);
       const { name, colorHex, description } = req.body;
 
