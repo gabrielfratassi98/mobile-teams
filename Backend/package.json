@@ -1,0 +1,32 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsx watch src/server.ts",
+    "setup": "npx prisma generate && npx prisma migrate dev --name init && npx prisma db seed && tsx watch src/server.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "better-sqlite3": "^12.11.1",
+    "express": "^5.2.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.3",
+    "dotenv": "^17.4.2",
+    "prisma": "^7.8.0",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  },
+  "type": "module"
+}
