@@ -17,9 +17,20 @@ export class TeamController {
         });
       }
 
-      const team = await teamService.createTeam({ name, colorHex, description });
+      const result = await teamService.createTeam({ name, colorHex, description });
       
-      return res.status(201).json({ data: team });
+      if (!result.success) {
+        return res.status(result.code || 400).json({
+          error: {
+            code: 'BAD_REQUEST',
+            message: result.message,
+          },
+        });
+      }
+
+      return res.status(201).json({
+        data: result.data,
+      });
     } catch (error) {
       console.error(error);
       return res.status(500).json({
@@ -36,7 +47,19 @@ export class TeamController {
 
       const result = await teamService.getTeams(limit, offset, search);
 
-      return res.status(200).json(result);
+      if (!result.success) {
+        return res.status(result.code || 400).json({
+          error: {
+            code: 'BAD_REQUEST',
+            message: result.message,
+          },
+        });
+      }
+
+      return res.status(200).json({
+        data: result.data,
+        meta: result.meta,
+      });
     } catch (error) {
       console.error(error);
       return res.status(500).json({
@@ -49,13 +72,24 @@ export class TeamController {
     try {
       const id = String(req.params.id);
 
-      const team = await teamService.getById(id) || [];
+      const result = await teamService.getById(id);
 
-      return res.status(200).json({ data: team });
+      if (!result.success) {
+        return res.status(result.code || 404).json({
+          error: {
+            code: 'NOT_FOUND',
+            message: result.message,
+          },
+        });
+      }
+
+      return res.status(200).json({
+        data: result.data,
+      });
     } catch (error) {
       console.error(error);
       return res.status(500).json({
-        error: { code: 'INTERNAL_SERVER_ERROR', message: 'Erro updating team' },
+        error: { code: 'INTERNAL_SERVER_ERROR', message: 'Error retrieving team' },
       });
     }
   }
@@ -65,12 +99,24 @@ export class TeamController {
       const id = String(req.params.id);
       const { name, colorHex, description } = req.body;
 
-      const team = await teamService.updateTeam(id, { name, colorHex, description });
-      return res.status(200).json({ data: team });
+      const result = await teamService.updateTeam(id, { name, colorHex, description });
+
+      if (!result.success) {
+        return res.status(result.code || 400).json({
+          error: {
+            code: 'BAD_REQUEST',
+            message: result.message,
+          },
+        });
+      }
+
+      return res.status(200).json({
+        data: result.data
+      });
     } catch (error) {
       console.error(error);
       return res.status(500).json({
-        error: { code: 'INTERNAL_SERVER_ERROR', message: 'Erro updating team' },
+        error: { code: 'INTERNAL_SERVER_ERROR', message: 'Error updating team' },
       });
     }
   }
@@ -78,13 +124,23 @@ export class TeamController {
   async delete(req: Request, res: Response) {
     try {
       const id = String(req.params.id);
-      await teamService.deleteTeam(id);
       
+      const result = await teamService.deleteTeam(id);
+      
+      if (!result.success) {
+        return res.status(result.code || 400).json({
+          error: {
+            code: 'BAD_REQUEST',
+            message: result.message,
+          },
+        });
+      }
+
       return res.status(204).send();
     } catch (error) {
       console.error(error);
       return res.status(500).json({
-        error: { code: 'INTERNAL_SERVER_ERROR', message: 'Erro deleting team' },
+        error: { code: 'INTERNAL_SERVER_ERROR', message: 'Error deleting team' },
       });
     }
   }

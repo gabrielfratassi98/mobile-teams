@@ -1,4 +1,5 @@
 import { prisma } from '../server.js';
+import { Result } from '../utils/result.js';
 
 export class TaskService {
   async createTask(data: { 
@@ -7,8 +8,8 @@ export class TaskService {
     status?: string; 
     dueDate?: Date; 
     teamIds?: string[] 
-  }) {
-    return await prisma.task.create({
+  }): Promise<Result<any, any>> {
+    const task = await prisma.task.create({
       data: {
         title: data.title,
         description: data.description,
@@ -22,6 +23,19 @@ export class TaskService {
         teams: true,
       }
     });
+
+    if (!task) {
+      return { 
+        success: false, 
+        code: 400,
+        message: "Não foi possível criar a tarefa"
+      };
+    }
+
+    return { 
+      success: true, 
+      data: task 
+    };
   }
 
   async getTasks(
@@ -31,7 +45,7 @@ export class TaskService {
     teamId?: string,
     status?: string,
     sort?: string
-  ) {
+  ): Promise<Result<any, any>> {
     const where: any = {};
     
     if (search) where.title = { contains: search };
@@ -55,19 +69,50 @@ export class TaskService {
       prisma.task.count({ where }),
     ]);
 
-    return {
-      data,
-      meta: { total, limit, offset },
+    if (!data) {
+      return { 
+        success: false, 
+        code: 404,
+        message: "Nenhuma tarefa encontrada"
+      };
+    }
+
+    const currentPage = Math.floor(offset / limit) + 1;
+    const totalPages = Math.ceil(total / limit);
+
+    return { 
+      success: true, 
+      data: data,
+      meta: { 
+        total, 
+        limit, 
+        offset,
+        currentPage,
+        totalPages
+      },
     };
   }
 
-  async getById(id: string) {
-    return await prisma.task.findFirst({
+  async getById(id: string): Promise<Result<any, any>> {
+    const task = await prisma.task.findFirst({
       where: { id },
       include: {
         teams: true
       }
-    })
+    });
+
+    if (!task) {
+      return { 
+        success: false, 
+        code: 404,
+        message: "Nenhuma tarefa encontrada"
+      };
+    }
+
+    return { 
+      success: true, 
+      data: task
+    };
   } 
   
   async updateTask(id: string, data: { 
@@ -76,8 +121,8 @@ export class TaskService {
     status?: string; 
     dueDate?: Date; 
     teamIds?: string[] 
-  }) {
-    return await prisma.task.update({
+  }): Promise<Result<any, any>> {
+    const task = await prisma.task.update({
       where: { id },
       data: {
         title: data.title,
@@ -90,27 +135,62 @@ export class TaskService {
       },
       include: { teams: true }
     });
+
+    if (!task) {
+      return { 
+        success: false, 
+        code: 400,
+        message: "Tarefa não atualizada"
+      };
+    }
+
+    return { 
+      success: true, 
+      data: task
+    };
   }
 
-  async deleteTask(id: string) {
-    return await prisma.task.delete({
+  async deleteTask(id: string): Promise<Result<any, any>> {
+    const task = await prisma.task.delete({
       where: { id },
     });
+
+    if (!task) {
+      return { 
+        success: false, 
+        code: 400,
+        message: "Tarefa não deletada"
+      };
+    }
+
+    return { 
+      success: true, 
+      data: task
+    };
   }
 
-  async deleteTeamTask(taskId: string, teamId: string) {
-    return await prisma.task.update({
-      where: { 
-        id: taskId
-      },
+  async deleteTeamTask(taskId: string, teamId: string): Promise<Result<any, any>> {
+    const task = await prisma.task.update({
+      where: { id: taskId },
       data: {
         teams: {
           disconnect: { id: teamId }
         }
       },
-      include: {
-        teams: true
-      }
+      include: { teams: true }
     });
+
+    if (!task) {
+      return { 
+        success: false, 
+        code: 400,
+        message: "Vínculo não removido"
+      };
+    }
+
+    return {
+      success: true,
+      data: task
+    };
   }
 }

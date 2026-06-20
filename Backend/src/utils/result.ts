@@ -1,3 +1,3 @@
-export type Result<T, E = string> = 
-  | { success: true; data: T }
-  | { success: false; error: E; message: string };
+export type Result<T, Int, E = string> = 
+  | { success: true; data: T, meta?: T }
+  | { success: false; code: Int; message: E };
