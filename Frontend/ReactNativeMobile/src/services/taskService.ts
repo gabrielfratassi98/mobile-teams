@@ -7,7 +7,8 @@ export interface Task {
   title: string;
   description: string;
   status: TaskStatus;
-  teamId: string; 
+  teamId: string;
+  teamName?: string;
 }
 
 export interface CreateTaskDTO {
@@ -26,6 +27,12 @@ export const tasksService = {
 
   getById: async (id: string): Promise<Task> => {
     const response = await api.get(`/tasks/${id}`);
+    return response.data.data;
+  },
+
+  getTasksByTeamId: async (teamId?: string): Promise<Task[]> => {
+    const url = `/tasks?teamId=${teamId}`;
+    const response = await api.get(url);
     return response.data.data;
   },
 

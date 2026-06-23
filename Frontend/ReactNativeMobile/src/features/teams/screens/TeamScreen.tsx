@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { Header } from '../../../components/Header';
 import { Button } from '../../../components/Button';
@@ -7,6 +7,7 @@ import { TeamCard } from '../components/TeamCard';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../routes'; 
 import { teamsService, Team } from '../../../services/teamService';
+import { useFocusEffect } from '@react-navigation/native';
 
 export function TeamScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -29,24 +30,22 @@ export function TeamScreen() {
     }
   }
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
+  useFocusEffect(
+    useCallback(() => {
       fetchTeams(searchQuery);
-    }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]); 
+    }, [searchQuery])
+  );
 
   const renderTeamCard = ({ item }: { item: Team }) => (
     <TeamCard 
       data={item}
-      onPress={() => navigation.navigate("Tasks")}
+      onPress={() => navigation.navigate("Tasks", { teamId: item.id, teamName: item.name })}
     />
   );
 
   return (
     <View className="flex-1 bg-gray-900 px-6">
-      <View className="z-10 bg-gray-900 pb-4 pt-6"> 
+      <View className="z-10 bg-gray-900 pb-4 pt-2"> 
         <Header 
           title="Times" 
           subtitle="Acesse um dos times" 

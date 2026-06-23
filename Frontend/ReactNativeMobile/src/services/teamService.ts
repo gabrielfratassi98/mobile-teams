@@ -1,14 +1,16 @@
 import { api } from './api';
+import { Task } from './taskService';
 
 export interface Team {
   id: string;
   name: string;
   colorHex?: string;
+  tasks?: Task[]
 }
 
 export interface CreateTeamDTO {
   name: string;
-  colorHex?: string; 
+  colorHex?: string;
 }
 
 export const teamsService = {
@@ -20,6 +22,16 @@ export const teamsService = {
   getById: async (id: string): Promise<Team> => {
     const response = await api.get(`/teams/${id}`);
     return response.data.data;
+  },
+
+  getTasksTeamById: async (id: string): Promise<Task[]> => {
+    try {
+      const response = await api.get(`/teams/${id}/tasks`);
+      return response.data.data;
+    }
+    catch {
+      return [];
+    }
   },
 
   create: async (data: CreateTeamDTO): Promise<Team> => {

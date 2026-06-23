@@ -3,11 +3,7 @@ import { View, Text } from 'react-native';
 
 export type TaskStatus = 'pendente' | 'em progresso' | 'concluída';
 
-interface StatusBadgeProps {
-  status: TaskStatus;
-}
-
-export function StatusBadge({ status }: StatusBadgeProps) {
+export function StatusBadge({ status }: { status: string }) {
   const getStyles = () => {
     switch (status) {
       case 'pendente':

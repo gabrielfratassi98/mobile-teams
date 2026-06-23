@@ -8,9 +8,9 @@ interface TaskCardProps {
     title: string;
     description: string;
     status: TaskStatus;
-    teamName: string;
+    teamName?: string;
   };
-  onPress?: () => void;
+  onPress: () => void;
 }
 
 export function TaskCard({ data, onPress }: TaskCardProps) {
@@ -21,9 +21,9 @@ export function TaskCard({ data, onPress }: TaskCardProps) {
       <View className="flex-row justify-between items-start mb-2">
         <View className="flex-1 mr-4">
           <Text className="text-white font-bold text-lg">{data.title}</Text>
-          <Text className="text-gray-500 text-xs mt-1">{data.teamName}</Text>
+          <Text className="text-gray-500 text-xs">{data.teamName}</Text>
         </View>
-        <StatusBadge status={data.status} />
+        <StatusBadge status={data.status.toLowerCase()} />
       </View>
       <Text className="text-gray-400 text-sm mt-2 leading-5" numberOfLines={2}>
         {data.description}

@@ -117,4 +117,29 @@ export class TeamService {
         data: team
       };
   }
+
+  async getTasksTeamById(id: string): Promise<Result<any, any>> {
+    const tasks = await prisma.task.findMany({
+      where: {
+        teams: {
+          some: {
+            id: id
+          }
+        }
+      }
+    });
+
+    if (!tasks || tasks.length === 0) { 
+      return { 
+        success: false, 
+        code: 404,
+        message: "Nenhuma tarefa encontrada para este time"
+      };
+    }
+
+    return { 
+      success: true, 
+      data: tasks 
+    };
+  }
 }

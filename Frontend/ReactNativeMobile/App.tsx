@@ -6,7 +6,7 @@
  */
 
 import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import { SafeAreaProvider, useSafeAreaInsets, } from 'react-native-safe-area-context';
+import { SafeAreaProvider, } from 'react-native-safe-area-context';
 import Routes from './src/routes'
 
 function App() {

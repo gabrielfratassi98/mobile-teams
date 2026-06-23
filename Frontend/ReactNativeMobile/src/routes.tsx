@@ -10,8 +10,8 @@ import { TaskFormScreen } from './features/tasks/screens/TaskFormScreen';
 export type RootStackParamList = {
   Team: undefined;
   NewTeam: undefined;
-  Tasks: undefined; 
-  TasksForm: undefined
+  Tasks: { teamId: string, teamName: string }; 
+  TasksForm: { id?: string } | undefined; 
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

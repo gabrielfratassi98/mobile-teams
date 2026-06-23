@@ -106,6 +106,32 @@ export class TeamController {
     }
   }
 
+  async getTasksTeamById(req: Request, res: Response) {
+    try {
+      const id = String(req.params.id);
+
+      const result = await teamService.getTasksTeamById(id);
+
+      if (!result.success) {
+        return res.status(result.code || 404).json({
+          error: {
+            code: 'NOT_FOUND',
+            message: result.message,
+          },
+        });
+      }
+
+      return res.status(200).json({
+        data: result.data,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+        error: { code: 'INTERNAL_SERVER_ERROR', message: 'Error retrieving team' },
+      });
+    }
+  }
+
   async update(req: Request, res: Response) {
     try {
       const validation = createTeamSchema.safeParse(req.body);
