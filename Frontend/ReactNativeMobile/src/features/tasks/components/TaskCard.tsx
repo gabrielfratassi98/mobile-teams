@@ -6,8 +6,8 @@ interface TaskCardProps {
   data: {
     id: string;
     title: string;
-    description: string;
-    status: TaskStatus;
+    description?: string; 
+    status: string;
     teamName?: string;
   };
   onPress: () => void;
@@ -23,11 +23,12 @@ export function TaskCard({ data, onPress }: TaskCardProps) {
           <Text className="text-white font-bold text-lg">{data.title}</Text>
           <Text className="text-gray-500 text-xs">{data.teamName}</Text>
         </View>
-        <StatusBadge status={data.status.toLowerCase()} />
+        <StatusBadge status={data.status} />
       </View>
       <Text className="text-gray-400 text-sm mt-2 leading-5" numberOfLines={2}>
-        {data.description}
+        {data.description || 'Sem descrição'}
       </Text>
     </TouchableOpacity>
   );
 }
+

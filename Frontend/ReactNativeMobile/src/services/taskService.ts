@@ -1,21 +1,15 @@
 import { api } from './api';
-
-export type TaskStatus = 'pendente' | 'em progresso' | 'concluída';
+import { CreateTaskDTO } from '../../../../Shared/validations';
+import { Team } from './teamService';
 
 export interface Task {
   id: string;
   title: string;
-  description: string;
-  status: TaskStatus;
-  teamId: string;
+  description?: string;
+  status: 'Pendente' | 'Em Progresso' | 'Concluída';
+  teamIds?: string[];
   teamName?: string;
-}
-
-export interface CreateTaskDTO {
-  title: string;
-  description: string;
-  teamId: string;
-  status?: TaskStatus; 
+  teams?: Team[];
 }
 
 export const tasksService = {

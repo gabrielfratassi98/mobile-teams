@@ -4,13 +4,15 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { TeamScreen } from './features/teams/screens/TeamScreen';
 import { NewTeamScreen } from './features/teams/screens/NewTeamScreen';
+import { EditTeamScreen } from './features/teams/screens/EditTeamScreen';
 import { TasksScreen } from './features/tasks/screens/TasksScreen';
 import { TaskFormScreen } from './features/tasks/screens/TaskFormScreen';
 
 export type RootStackParamList = {
   Team: undefined;
   NewTeam: undefined;
-  Tasks: { teamId: string, teamName: string }; 
+  EditTeam: { id: string };
+  Tasks: { teamId: string, teamName: string } | undefined; 
   TasksForm: { id?: string } | undefined; 
 };
 
@@ -39,6 +41,11 @@ export default function Routes() {
         <Stack.Screen 
           name="NewTeam" 
           component={NewTeamScreen} 
+        />
+
+        <Stack.Screen 
+          name="EditTeam" 
+          component={EditTeamScreen} 
         />
 
         <Stack.Screen 

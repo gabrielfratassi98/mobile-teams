@@ -5,6 +5,7 @@ import { Header } from '../../../components/Header';
 import { Input } from '../../../components/Input';
 import { Button } from '../../../components/Button';
 import { teamsService } from '../../../services/teamService';
+import { createTaskSchema } from '../../../../../../Shared/validations';
 
 const TEAM_COLORS = [
   '#FACC15',
@@ -42,10 +43,11 @@ export function NewTeamScreen() {
   }
   
   return (
+    
     <View className="flex-1 bg-gray-900 px-6">
       <Header 
         title="Novo Time" 
-        subtitle="crie seu time para gerenciar as tarefas" 
+        subtitle="Crie seu time para gerenciar as tarefas" 
       />
 
       <View className="flex-1 mt-4">
@@ -88,7 +90,7 @@ export function NewTeamScreen() {
 
       <View className="pb-8 bottom-10">
         <Button 
-          title={isLoading ? "Criando..." : "Criar"} 
+          title="Criar" 
           variant="primary" 
           onPress={handleCreate}
           disabled={isLoading}

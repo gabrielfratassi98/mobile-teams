@@ -1,20 +1,18 @@
 import React, { useState, useCallback } from 'react';
-import { View, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, FlatList, ActivityIndicator, Alert, Text } from 'react-native';
 import { Header } from '../../../components/Header';
 import { Button } from '../../../components/Button';
-import { Input } from '../../../components/Input'; 
+import { Input } from '../../../components/Input';
 import { TeamCard } from '../components/TeamCard';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { RootStackParamList } from '../../../routes'; 
+import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
+import { RootStackParamList } from '../../../routes';
 import { teamsService, Team } from '../../../services/teamService';
-import { useFocusEffect } from '@react-navigation/native';
 
 export function TeamScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  
+
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
   const [searchQuery, setSearchQuery] = useState('');
 
   async function fetchTeams(search = '') {
@@ -23,7 +21,6 @@ export function TeamScreen() {
       const data = await teamsService.getTeams(search);
       setTeams(data);
     } catch (error) {
-      console.error(error);
       Alert.alert('Erro', 'Não foi possível carregar os times.');
     } finally {
       setIsLoading(false);
@@ -37,26 +34,28 @@ export function TeamScreen() {
   );
 
   const renderTeamCard = ({ item }: { item: Team }) => (
-    <TeamCard 
+    <TeamCard
       data={item}
-      onPress={() => navigation.navigate("Tasks", { teamId: item.id, teamName: item.name })}
+      onPress={() => navigation.navigate("EditTeam", { id: item.id })}
     />
   );
 
   return (
     <View className="flex-1 bg-gray-900 px-6">
-      <View className="z-10 bg-gray-900 pb-4 pt-2"> 
-        <Header 
-          title="Times" 
-          subtitle="Acesse um dos times" 
-          showBackButton={false} 
+      <View>
+        <Header
+          title="Times"
+          subtitle="Gerencie seus times"
+          showBackButton={false}
         />
-        <Input 
-          placeholder="Busque um time" 
-          value={searchQuery}
-          onChangeText={setSearchQuery} 
-          onSubmitEditing={() => fetchTeams(searchQuery)}
-        />
+        <View className="">
+          <Input
+            placeholder="Buscar time por nome..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={() => fetchTeams(searchQuery)}
+          />
+        </View>
       </View>
 
       {isLoading ? (
@@ -65,19 +64,32 @@ export function TeamScreen() {
         </View>
       ) : (
         <FlatList
+          className="flex-1"
           data={teams}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderTeamCard}
-          contentContainerStyle={{ paddingBottom: 120 }}
+          contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
-          className="top-2"
+          ListEmptyComponent={() => (
+            <View className="flex-1 justify-center items-center px-10">
+              <Text className="text-gray-500 text-center text-lg">
+                Nenhum time encontrado.
+              </Text>
+            </View>
+          )}
         />
       )}
 
-      <View className="absolute bottom-10 left-6 right-6">
-        <Button 
-          title="Criar time" 
-          variant="primary" 
+      <View className="mb-10 mt-4 gap-3">
+        <Button
+          title="Ver todas as tarefas"
+          variant="outline"
+          onPress={() => navigation.navigate("Tasks")}
+        />
+        
+        <Button
+          title="Criar novo time"
+          variant="primary"
           onPress={() => navigation.navigate("NewTeam")}
         />
       </View>
