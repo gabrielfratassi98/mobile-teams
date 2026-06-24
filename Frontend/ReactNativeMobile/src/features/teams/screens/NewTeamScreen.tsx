@@ -5,7 +5,6 @@ import { Header } from '../../../components/Header';
 import { Input } from '../../../components/Input';
 import { Button } from '../../../components/Button';
 import { teamsService } from '../../../services/teamService';
-import { createTaskSchema } from '../../../../../../Shared/validations';
 
 const TEAM_COLORS = [
   '#FACC15',

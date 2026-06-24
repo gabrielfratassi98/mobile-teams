@@ -106,7 +106,7 @@ export class TaskController {
 
   async update(req: Request, res: Response) {
     try {
-      const validation = createTaskSchema.safeParse(req.body);
+      const validation = createTaskSchema.partial().safeParse(req.body);
 
       if (!validation.success) {
         return res.status(400).json({
@@ -118,6 +118,7 @@ export class TaskController {
       }
 
       const id = String(req.params.id);
+      
       const { title, description, status, dueDate, teamIds } = req.body;
       const parsedDueDate = dueDate ? new Date(dueDate) : undefined;
 

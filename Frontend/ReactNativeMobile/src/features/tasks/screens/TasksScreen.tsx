@@ -7,6 +7,7 @@ import { RootStackParamList } from '../../../routes';
 import { Task, tasksService } from '../../../services/taskService';
 import { teamsService } from '../../../services/teamService';
 import { useFocusEffect } from '@react-navigation/native';
+import { Button } from '../../../components/Button';
 
 export function TasksScreen() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -81,6 +82,14 @@ export function TasksScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      <View className="mb-10 mt-4 gap-3">
+        <Button
+          title="Criar tarefa"
+          variant="primary"
+          onPress={() => navigation.navigate("TasksForm")}
+        />
+      </View>
     </View>
   );
 }

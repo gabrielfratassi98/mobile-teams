@@ -11,15 +11,15 @@ async function main() {
   await prisma.team.deleteMany();
 
   const teamFront = await prisma.team.create({
-    data: { name: 'Frontend', colorHex: '#61DAFB', description: 'Equipe de UI/UX e React' }
+    data: { name: 'Frontend', colorHex: '#FACC15', description: 'Equipe de UI/UX e React' }
   });
   
   const teamBack = await prisma.team.create({
-    data: { name: 'Backend', colorHex: '#339933', description: 'Equipe de Node.js e Banco de Dados' }
+    data: { name: 'Backend', colorHex: '#EF4444', description: 'Equipe de Node.js e Banco de Dados' }
   });
 
   const teamMobile = await prisma.team.create({
-    data: { name: 'Mobile', colorHex: '#000000', description: 'Equipe de React Native' }
+    data: { name: 'Mobile', colorHex: '#F97316', description: 'Equipe de React Native' }
   });
 
   await prisma.task.create({

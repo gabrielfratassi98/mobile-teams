@@ -42,5 +42,10 @@ export const tasksService = {
 
   delete: async (id: string): Promise<void> => {
     await api.delete(`/tasks/${id}`);
+  },
+
+  removeTeam: async (taskId: string, teamId: string) => {
+    const response = await api.delete(`/tasks/${taskId}/team/${teamId}`);
+    return response.data;
   }
 };
