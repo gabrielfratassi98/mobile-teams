@@ -84,9 +84,7 @@ src
 ├── controllers
 ├── services
 ├── routes
-├── middlewares
 ├── prisma
-├── utils
 └── server.ts
 ```
 
@@ -119,10 +117,9 @@ src
 ├── components
 ├── screens
 ├── services
-├── hooks
 ├── routes
 ├── types
-└── utils
+└── 
 ```
 
 ---
@@ -136,7 +133,6 @@ src
 * Express
 * Prisma ORM
 * SQLite
-* Jest
 
 ## Frontend
 
@@ -156,22 +152,11 @@ src
 
 Foi utilizado para gerenciamento do estado proveniente da API (*Server State*), reduzindo a complexidade de sincronização manual dos dados.
 
-Benefícios:
-
-* Cache automático
-* Refetch simplificado
-* Controle de loading
-* Controle de erros
-* Melhor experiência do usuário
-
 ## React Hook Form + Zod
 
 A combinação foi utilizada para:
 
 * Validação de formulários
-* Tipagem segura
-* Melhor experiência de desenvolvimento
-* Redução de validações manuais
 
 ## SQLite
 
@@ -237,7 +222,6 @@ Ainda existem melhorias visuais que poderiam ser adicionadas:
 * Biblioteca completa de ícones
 * Feedbacks visuais mais ricos
 * Skeleton Loading
-* Empty States
 * Melhor responsividade
 * Refinamentos de layout
 
@@ -316,69 +300,6 @@ Execute o aplicativo:
 
 ```bash
 npm run android
-```
-
----
-
-# 📡 Endpoints Principais
-
-## Teams
-
-### Listar Times
-
-```http
-GET /api/teams
-```
-
-### Buscar Times
-
-```http
-GET /api/teams?search=nome
-```
-
-### Criar Time
-
-```http
-POST /api/teams
-```
-
----
-
-## Tasks
-
-### Listar Tarefas
-
-```http
-GET /api/tasks
-```
-
-### Criar Tarefa
-
-```http
-POST /api/tasks
-```
-
-Exemplo:
-
-```json
-{
-  "title": "Nova tarefa",
-  "description": "Descrição da tarefa",
-  "status": "PENDENTE",
-  "teamIds": [1, 2]
-}
-```
-
-### Atualizar Tarefa
-
-```http
-PUT /api/tasks/:id
-```
-
-### Remover Tarefa
-
-```http
-DELETE /api/tasks/:id
 ```
 
 ---
