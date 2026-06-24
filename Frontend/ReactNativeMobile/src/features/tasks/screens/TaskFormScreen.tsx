@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, ScrollView, Alert, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Header } from '../../../components/Header';
 import { Input } from '../../../components/Input';
 import { Button } from '../../../components/Button';
@@ -9,6 +12,9 @@ import type { RootStackParamList } from '../../../routes';
 import { tasksService } from '../../../services/taskService';
 import { Team, teamsService } from '../../../services/teamService';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { createTaskSchema, CreateTaskDTO } from '../../../../../validations/schemas';
+
+type TaskFormInput = z.input<typeof createTaskSchema>;
 
 const MOCK_STATUS = [
   { id: 'Pendente', label: 'Pendente' },
@@ -23,10 +29,17 @@ export function TaskFormScreen() {
   const id = route.params?.id;
   const isEditing = !!id;
 
-  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const { control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<TaskFormInput>({
+    resolver: zodResolver(createTaskSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      status: 'Pendente',
+      teamIds: [],
+    }
+  });
+
+  const selectedTeams = watch('teamIds') || [];
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery({
     queryKey: ['teams'],
@@ -41,18 +54,17 @@ export function TaskFormScreen() {
 
   useEffect(() => {
     if (task) {
-      setTitle(task.title);
-      setDescription(task.description || "");
-      setSelectedStatus(task.status);
-
-      if (task.teams && task.teams.length > 0) {
-        setSelectedTeams(task.teams.map((t: Team) => t.id));
-      }
+      reset({
+        title: task.title,
+        description: task.description || "",
+        status: task.status,
+        teamIds: task.teams ? task.teams.map((t: Team) => t.id) : [],
+      });
     }
-  }, [task]);
+  }, [task, reset]);
 
   const createMutation = useMutation({
-    mutationFn: (payload: any) => tasksService.create(payload),
+    mutationFn: (payload: CreateTaskDTO) => tasksService.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'], exact: false });
       navigation.goBack();
@@ -63,7 +75,7 @@ export function TaskFormScreen() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (payload: any) => tasksService.update(id!, payload),
+    mutationFn: (payload: CreateTaskDTO) => tasksService.update(id!, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['task', id] });
@@ -86,35 +98,23 @@ export function TaskFormScreen() {
   });
 
   function handleToggleTeam(teamId: string) {
-    setSelectedTeams(prev => {
-      if (prev.includes(teamId)) {
-        return prev.filter(tid => tid !== teamId);
-      }
-      return [...prev, teamId];
-    });
+    const currentTeams = [...selectedTeams];
+    if (currentTeams.includes(teamId)) {
+      setValue('teamIds', currentTeams.filter(tid => tid !== teamId));
+    } else {
+      setValue('teamIds', [...currentTeams, teamId]);
+    }
   }
 
-function handleSave() {
-  if (!title.trim()) {
-    Alert.alert("Erro", "Informe o título da tarefa");
-    return;
+  function onSubmit(data: TaskFormInput) {
+    const payload = data as CreateTaskDTO;
+    
+    if (isEditing) {
+      updateMutation.mutate(payload);
+    } else {
+      createMutation.mutate(payload);
+    }
   }
-
-  const payload: any = {
-    title,
-    description,
-    status: selectedStatus || 'Pendente',
-    teamIds: selectedTeams
-  };
-
-  if (isEditing) {
-    if (!id) return;
-    updateMutation.mutate(payload);
-    return;
-  }
-
-  createMutation.mutate(payload);
-}
 
   const isScreenLoading =
     isLoadingTeams ||
@@ -139,50 +139,70 @@ function handleSave() {
           <Text className="text-gray-300 text-sm font-semibold mb-2">
             Título da Tarefa
           </Text>
-
-          <Input
-            placeholder="Ex: Atualizar layout..."
-            value={title}
-            onChangeText={setTitle}
+          
+          <Controller
+            control={control}
+            name="title"
+            render={({ field: { onChange, value } }) => (
+              <Input
+                placeholder="Ex: Atualizar layout..."
+                value={value}
+                onChangeText={onChange}
+              />
+            )}
           />
+          {errors.title && <Text className="text-red-500 text-xs mt-1">{errors.title.message}</Text>}
 
           <Text className="text-gray-300 text-sm font-semibold mt-4 mb-2">
             Descrição
           </Text>
 
-          <Input
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Detalhes da tarefa..."
+          <Controller
+            control={control}
+            name="description"
+            render={({ field: { onChange, value } }) => (
+              <Input
+                value={value}
+                onChangeText={onChange}
+                placeholder="Detalhes da tarefa..."
+              />
+            )}
           />
+          {errors.description && <Text className="text-red-500 text-xs mt-1">{errors.description.message}</Text>}
 
           <Text className="text-gray-300 text-sm font-semibold mt-4 mb-3">
             Status
           </Text>
 
-          <View className="bg-gray-800 rounded-lg mb-4 border border-gray-700">
-            <Picker
-              selectedValue={selectedStatus}
-              onValueChange={(itemValue) => setSelectedStatus(itemValue)}
-              dropdownIconColor="#9CA3AF"
-              style={{ color: '#9CA3AF', height: 56 }}
-            >
-              <Picker.Item label="Selecione um status" value="" />
-              {MOCK_STATUS.map((status) => (
-                <Picker.Item
-                  key={status.id}
-                  label={status.label}
-                  value={status.id}
-                />
-              ))}
-            </Picker>
-          </View>
+          <Controller
+            control={control}
+            name="status"
+            render={({ field: { onChange, value } }) => (
+              <View className="bg-gray-800 rounded-lg mb-1 border border-gray-700">
+                <Picker
+                  selectedValue={value}
+                  onValueChange={onChange}
+                  dropdownIconColor="#9CA3AF"
+                  style={{ color: '#9CA3AF', height: 56 }}
+                >
+                  {MOCK_STATUS.map((status) => (
+                    <Picker.Item
+                      key={status.id}
+                      label={status.label}
+                      value={status.id}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            )}
+          />
+          {errors.status && <Text className="text-red-500 text-xs mt-1">{errors.status.message}</Text>}
 
           <Text className="text-gray-300 text-sm font-semibold mt-4 mb-3">
             Vincular Times
           </Text>
 
-          <View className="bg-gray-800 p-4 rounded-lg border border-gray-700 mb-8">
+          <View className="bg-gray-800 p-4 rounded-lg border border-gray-700 mb-2">
             {teams.length === 0 ? (
               <Text className="text-gray-500">Nenhum time cadastrado.</Text>
             ) : (
@@ -220,6 +240,7 @@ function handleSave() {
               })
             )}
           </View>
+          {errors.teamIds && <Text className="text-red-500 text-xs mt-1 mb-8">{errors.teamIds.message}</Text>}
         </ScrollView>
       )}
 
@@ -237,7 +258,7 @@ function handleSave() {
         <Button
           title={isEditing ? "Salvar Alterações" : "Criar Tarefa"}
           variant="primary"
-          onPress={handleSave}
+          onPress={handleSubmit(onSubmit)}
           disabled={isScreenLoading}
         />
       </View>

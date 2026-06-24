@@ -1,16 +1,12 @@
 import { api } from './api';
 import { Task } from './taskService';
+import { CreateTeamDTO } from '../../../../Shared/validations';
 
 export interface Team {
   id: string;
   name: string;
   colorHex?: string;
   tasks?: Task[]
-}
-
-export interface CreateTeamDTO {
-  name: string;
-  colorHex?: string;
 }
 
 export const teamsService = {

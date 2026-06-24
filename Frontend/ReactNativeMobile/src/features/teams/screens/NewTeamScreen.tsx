@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Header } from '../../../components/Header';
 import { Input } from '../../../components/Input';
 import { Button } from '../../../components/Button';
 import { teamsService } from '../../../services/teamService';
+import { createTeamSchema, CreateTeamDTO } from '../../../../../validations/schemas';
 
 const TEAM_COLORS = [
   '#FACC15',
@@ -20,33 +23,22 @@ const TEAM_COLORS = [
 export function NewTeamScreen() {
   const navigation = useNavigation();
 
-  const [name, setName] = useState('');
-  const [colorHex, setColorHex] = useState(TEAM_COLORS[0]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  async function handleCreate() {
-    const trimmedName = name.trim();
-
-    if (!trimmedName) {
-      Alert.alert('Aviso', 'Informe o nome do time.');
-      return;
+  const { control, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<CreateTeamDTO>({
+    resolver: zodResolver(createTeamSchema),
+    defaultValues: {
+      name: '',
+      colorHex: TEAM_COLORS[0],
     }
+  });
 
-    if (isLoading) return;
+  const colorHex = watch('colorHex');
 
+  async function onSubmit(data: CreateTeamDTO) {
     try {
-      setIsLoading(true);
-
-      await teamsService.create({
-        name: trimmedName,
-        colorHex,
-      });
-
+      await teamsService.create(data);
       navigation.goBack();
     } catch {
       Alert.alert('Erro', 'Não foi possível criar o time.');
-    } finally {
-      setIsLoading(false);
     }
   }
 
@@ -55,11 +47,18 @@ export function NewTeamScreen() {
       <Header title="Novo Time" subtitle="Crie seu time para gerenciar as tarefas" />
 
       <View className="flex-1 mt-4">
-        <Input
-          placeholder="Nome do time"
-          value={name}
-          onChangeText={setName}
+        <Controller
+          control={control}
+          name="name"
+          render={({ field: { onChange, value } }) => (
+            <Input
+              placeholder="Nome do time"
+              value={value}
+              onChangeText={onChange}
+            />
+          )}
         />
+        {errors.name && <Text className="text-red-500 text-xs mt-1">{errors.name.message}</Text>}
 
         <Text className="text-gray-400 text-base mt-8 mb-4 font-semibold">
           Selecione a cor do time
@@ -69,7 +68,7 @@ export function NewTeamScreen() {
           {TEAM_COLORS.map((color) => (
             <TouchableOpacity
               key={color}
-              onPress={() => setColorHex(color)}
+              onPress={() => setValue('colorHex', color)}
               className={`w-12 h-12 rounded-full mr-4 items-center justify-center ${
                 colorHex === color ? 'border-2 border-white' : ''
               }`}
@@ -81,14 +80,15 @@ export function NewTeamScreen() {
             </TouchableOpacity>
           ))}
         </ScrollView>
+        {errors.colorHex && <Text className="text-red-500 text-xs mt-1">{errors.colorHex.message}</Text>}
       </View>
 
       <View className="pb-8 bottom-10">
         <Button
-          title={isLoading ? 'Criando...' : 'Criar'}
+          title={isSubmitting ? 'Criando...' : 'Criar'}
           variant="primary"
-          onPress={handleCreate}
-          disabled={isLoading}
+          onPress={handleSubmit(onSubmit)}
+          disabled={isSubmitting}
         />
       </View>
     </View>

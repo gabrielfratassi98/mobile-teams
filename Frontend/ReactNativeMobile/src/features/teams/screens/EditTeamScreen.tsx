@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { useNavigation, NavigationProp, useRoute, RouteProp } from '@react-navigation/native';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import type { RootStackParamList } from '../../../routes';
 import { Header } from '../../../components/Header';
 import { Input } from '../../../components/Input';
 import { Button } from '../../../components/Button';
 import { teamsService } from '../../../services/teamService';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { createTeamSchema, CreateTeamDTO } from '../../../../../validations/schemas';
 
 const TEAM_COLORS = [
   '#FACC15',
@@ -25,8 +28,15 @@ export function EditTeamScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'EditTeam'>>();
   const { id } = route.params ?? {};
 
-  const [name, setName] = useState('');
-  const [colorHex, setColorHex] = useState(TEAM_COLORS[0]);
+  const { control, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<CreateTeamDTO>({
+    resolver: zodResolver(createTeamSchema),
+    defaultValues: {
+      name: '',
+      colorHex: TEAM_COLORS[0],
+    }
+  });
+
+  const colorHex = watch('colorHex');
 
   const { data: team, isLoading: isLoadingTeam } = useQuery({
     queryKey: ['team', id],
@@ -36,14 +46,15 @@ export function EditTeamScreen() {
 
   useEffect(() => {
     if (team) {
-      setName(team.name ?? '');
-      setColorHex(team.colorHex ?? TEAM_COLORS[0]);
+      reset({
+        name: team.name ?? '',
+        colorHex: team.colorHex ?? TEAM_COLORS[0],
+      });
     }
-  }, [team]);
+  }, [team, reset]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: { name: string; colorHex: string }) =>
-      teamsService.update(id!, data),
+    mutationFn: (data: CreateTeamDTO) => teamsService.update(id!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams'] });
       queryClient.invalidateQueries({ queryKey: ['team', id] });
@@ -61,20 +72,9 @@ export function EditTeamScreen() {
     onError: () => Alert.alert('Erro', 'Não foi possível deletar o time.'),
   });
 
-  function handleUpdate() {
-    const trimmedName = name.trim();
-
-    if (!trimmedName) {
-      Alert.alert('Aviso', 'Informe o nome do time.');
-      return;
-    }
-
+  function onSubmit(data: CreateTeamDTO) {
     if (!id) return;
-
-    updateMutation.mutate({
-      name: trimmedName,
-      colorHex,
-    });
+    updateMutation.mutate(data);
   }
 
   if (isLoadingTeam) {
@@ -90,7 +90,14 @@ export function EditTeamScreen() {
       <Header title="Editar Time" subtitle="Atualize as informações do seu time" />
 
       <View className="flex-1 mt-4">
-        <Input value={name} onChangeText={setName} />
+        <Controller
+          control={control}
+          name="name"
+          render={({ field: { onChange, value } }) => (
+            <Input value={value} onChangeText={onChange} />
+          )}
+        />
+        {errors.name && <Text className="text-red-500 text-xs mt-1">{errors.name.message}</Text>}
 
         <Text className="text-gray-400 text-base mt-8 mb-4 font-semibold">
           Selecione a cor do time
@@ -100,7 +107,7 @@ export function EditTeamScreen() {
           {TEAM_COLORS.map((color) => (
             <TouchableOpacity
               key={color}
-              onPress={() => setColorHex(color)}
+              onPress={() => setValue('colorHex', color)}
               className={`w-12 h-12 rounded-full mr-4 items-center justify-center ${
                 colorHex === color ? 'border-2 border-white' : ''
               }`}
@@ -112,6 +119,7 @@ export function EditTeamScreen() {
             </TouchableOpacity>
           ))}
         </ScrollView>
+        {errors.colorHex && <Text className="text-red-500 text-xs mt-1">{errors.colorHex.message}</Text>}
       </View>
 
       <View className="pb-8 bottom-10">
@@ -137,7 +145,7 @@ export function EditTeamScreen() {
         <Button
           title={updateMutation.isPending ? 'Salvando...' : 'Salvar'}
           variant="primary"
-          onPress={handleUpdate}
+          onPress={handleSubmit(onSubmit)}
           disabled={updateMutation.isPending || deleteMutation.isPending}
         />
       </View>
