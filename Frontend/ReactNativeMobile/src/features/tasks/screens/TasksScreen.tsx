@@ -1,6 +1,5 @@
-// Frontend/ReactNativeMobile/src/features/tasks/screens/TasksScreen.tsx
 import React from 'react';
-import { View, FlatList, ActivityIndicator } from 'react-native';
+import { View, FlatList, ActivityIndicator, Text } from 'react-native';
 import { Header } from '../../../components/Header';
 import { TaskCard } from '../components/TaskCard';
 import { useNavigation, NavigationProp, useRoute, RouteProp } from '@react-navigation/native';
@@ -25,10 +24,16 @@ export function TasksScreen() {
     }
   });
 
+  const { data: teamData } = useQuery({
+    queryKey: ['team', teamId],
+    queryFn: () => teamsService.getById(teamId!),
+    enabled: !!teamId
+  });
+
   const renderHeader = () => (
     <Header 
-      title="Tarefas" 
-      subtitle="Adicione a galera e separe os times" 
+      title={teamData ? `Tarefas: ${teamData.name}` : "Tarefas"} 
+      subtitle={teamId ? "Gerenciando tarefas deste time" : "Adicione a galera e separe os times"} 
     />
   );
 
@@ -43,7 +48,9 @@ export function TasksScreen() {
           data={tasks}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => {
-            const teamNames = (item as any).teams?.map((t: any) => t.name).join(', ') || 'Sem time';
+            const teamNames = (item as any).teams && (item as any).teams.length > 0 
+              ? (item as any).teams.map((t: any) => t.name).join(', ') 
+              : 'Sem time';
             
             return (
               <TaskCard 
