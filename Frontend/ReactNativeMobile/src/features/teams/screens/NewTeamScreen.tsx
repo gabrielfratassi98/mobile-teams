@@ -7,7 +7,7 @@ import { Header } from '../../../components/Header';
 import { Input } from '../../../components/Input';
 import { Button } from '../../../components/Button';
 import { teamsService } from '../../../services/teamService';
-import { createTeamSchema, CreateTeamDTO } from '../../../../../validations/schemas';
+import { createTeamSchema, CreateTeamDTO } from '../../../../validations/schemas';
 
 const TEAM_COLORS = [
   '#FACC15',
@@ -35,7 +35,10 @@ export function NewTeamScreen() {
 
   async function onSubmit(data: CreateTeamDTO) {
     try {
-      await teamsService.create(data);
+      await teamsService.create({
+        ...data,
+        colorHex: data.colorHex ?? TEAM_COLORS[0]
+      });
       navigation.goBack();
     } catch {
       Alert.alert('Erro', 'Não foi possível criar o time.');

@@ -9,7 +9,7 @@ import { Input } from '../../../components/Input';
 import { Button } from '../../../components/Button';
 import { teamsService } from '../../../services/teamService';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createTeamSchema, CreateTeamDTO } from '../../../../../validations/schemas';
+import { createTeamSchema, CreateTeamDTO } from '../../../../validations/schemas';
 
 const TEAM_COLORS = [
   '#FACC15',

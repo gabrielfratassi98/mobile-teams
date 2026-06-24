@@ -12,7 +12,7 @@ import type { RootStackParamList } from '../../../routes';
 import { tasksService } from '../../../services/taskService';
 import { Team, teamsService } from '../../../services/teamService';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createTaskSchema, CreateTaskDTO } from '../../../../../validations/schemas';
+import { createTaskSchema, CreateTaskDTO } from '../../../../validations/schemas';
 
 type TaskFormInput = z.input<typeof createTaskSchema>;
 
