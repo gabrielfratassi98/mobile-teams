@@ -304,18 +304,6 @@ npm run android
 
 ---
 
-# 🧪 Testes
-
-Backend:
-
-```bash
-npm run test
-```
-
-Os testes cobrem as principais regras de negócio implementadas.
-
----
-
 # 🚀 Evoluções Futuras
 
 Caso o projeto evoluísse para um ambiente de produção, as prioridades seriam:
