@@ -12,7 +12,7 @@ export type RootStackParamList = {
   Team: undefined;
   NewTeam: undefined;
   EditTeam: { id: string };
-  Tasks: { teamId: string, teamName: string } | undefined; 
+  Tasks: { teamId: string } | undefined; 
   TasksForm: { id?: string } | undefined; 
 };
 

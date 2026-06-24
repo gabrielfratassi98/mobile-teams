@@ -1,3 +1,4 @@
+// Frontend/ReactNativeMobile/src/features/tasks/screens/TaskFormScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, Alert, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
@@ -8,6 +9,7 @@ import { useNavigation, NavigationProp, useRoute, RouteProp } from '@react-navig
 import type { RootStackParamList } from '../../../routes'; 
 import { tasksService } from '../../../services/taskService';
 import { Team, teamsService } from '../../../services/teamService';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const MOCK_STATUS = [
   { id: 'Pendente', label: 'Pendente' },
@@ -16,126 +18,99 @@ const MOCK_STATUS = [
 ];
 
 export function TaskFormScreen() {
+  const queryClient = useQueryClient();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'TasksForm'>>();
   const id = route.params?.id;
   const isEditing = !!id;
   
-  const [isLoading, setIsLoading] = useState(false);
-  
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
-  const [initialTeams, setInitialTeams] = useState<string[]>([]);
-  
   const [selectedStatus, setSelectedStatus] = useState<string>('');
-  const [teams, setTeams] = useState<Team[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
 
-  useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      await fetchTeams();
-      await fetchTask();
-      setIsLoading(false);
-    }
-    loadData();
-  }, [id]);
-  
-  async function fetchTeams() {
-    try {
-      const teamsData = await teamsService.getTeams('');
-      setTeams(teamsData || []);
-    } catch {
-      Alert.alert("Erro", "Não foi possível buscar os times");
-    }
-  }
+  const { data: teams = [], isLoading: isLoadingTeams } = useQuery({
+    queryKey: ['teams'],
+    queryFn: () => teamsService.getTeams('')
+  });
 
-  async function fetchTask() {
-    try {
-      if (id) {
-        const task = await tasksService.getById(id);
-        setTitle(task.title);
-        setDescription(task.description || "");
-        setSelectedStatus(task.status);
-        
-        if (task.teams && task.teams.length > 0) {
-          const teamIds = task.teams.map((t: Team) => t.id);
-          setSelectedTeams(teamIds);
-          
-          setInitialTeams(teamIds);
-        }
+  const { data: task, isLoading: isLoadingTask } = useQuery({
+    queryKey: ['task', id],
+    queryFn: () => tasksService.getById(id!),
+    enabled: isEditing,
+  });
+
+  useEffect(() => {
+    if (task) {
+      setTitle(task.title);
+      setDescription(task.description || "");
+      setSelectedStatus(task.status);
+      if (task.teams && task.teams.length > 0) {
+        setSelectedTeams(task.teams.map((t: Team) => t.id));
       }
-    } catch {
-      Alert.alert("Erro", "Não foi possível buscar a tarefa");
     }
-  }
+  }, [task]);
+
+  const createMutation = useMutation({
+    mutationFn: (payload: any) => tasksService.create(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      navigation.goBack();
+    },
+    onError: () => {
+      Alert.alert("Erro", "Não foi possível criar a tarefa");
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (payload: any) => tasksService.update(id!, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task', id] });
+      navigation.goBack();
+    },
+    onError: () => {
+      Alert.alert("Erro", "Não foi possível editar a tarefa.");
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => tasksService.delete(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      navigation.goBack();
+    },
+    onError: () => {
+      Alert.alert("Erro", "Não foi possível deletar a tarefa");
+    }
+  });
 
   function handleToggleTeam(teamId: string) {
     setSelectedTeams(prev => {
       if (prev.includes(teamId)) {
-        return prev.filter(id => id !== teamId);
+        return prev.filter(tid => tid !== teamId);
       } else {
         return [...prev, teamId];
       }
     });
   }
 
-  async function handleDelete() {
-    try {
-      if (id) {
-        setIsLoading(true);
-        await tasksService.delete(id);
-        navigation.goBack();
-      }
-    } catch {
-      Alert.alert("Erro", "Não foi possível deletar a tarefa");
-    } finally {
-      setIsLoading(false);
+  function handleSave() {
+    const payload: any = {
+      title,
+      description,
+      status: selectedStatus,
+      teamIds: selectedTeams
+    };
+
+    if (isEditing) {
+      updateMutation.mutate(payload);
+    } else {
+      createMutation.mutate(payload);
     }
   }
 
-async function handleEdit() {
-    if (!id) return;
-
-    try {
-      setIsLoading(true);
-
-      const payload: any = {
-        title,
-        description,
-        status: selectedStatus,
-        teamIds: selectedTeams 
-      };
-
-      await tasksService.update(id, payload);
-      navigation.goBack();
-    } catch (error) {
-      console.error(error);
-      Alert.alert("Erro", "Não foi possível editar a tarefa.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function handleCreate() {
-    try {
-      setIsLoading(true);
-
-      const payload: any = {
-        title,
-        description,
-        status: selectedStatus,
-        teamIds: selectedTeams
-      };
-
-      await tasksService.create(payload);
-      navigation.goBack();
-    } catch {
-      Alert.alert("Erro", "Não foi possível criar a tarefa");
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const isScreenLoading = isLoadingTeams || isLoadingTask || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   return (
     <View className="flex-1 bg-gray-900 px-6">
@@ -144,7 +119,7 @@ async function handleEdit() {
         subtitle="Gerenciar as tarefas" 
       />
 
-      {isLoading ? (
+      {isScreenLoading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator color="#10B981" size="large" />
         </View>
@@ -163,6 +138,9 @@ async function handleEdit() {
             value={description}
             onChangeText={setDescription}
             placeholder="Detalhes da tarefa..." 
+            className="h-32 text-left"
+            multiline
+            textAlignVertical="top"
           />
 
           <Text className="text-gray-300 text-sm font-semibold mt-4 mb-3">Status</Text>
@@ -185,7 +163,7 @@ async function handleEdit() {
             {teams.length === 0 ? (
               <Text className="text-gray-500">Nenhum time cadastrado.</Text>
             ) : (
-              teams.map((team) => {
+              teams.map((team: Team) => {
                 const isSelected = selectedTeams.includes(team.id);
                 return (
                   <TouchableOpacity
@@ -218,16 +196,16 @@ async function handleEdit() {
           <Button 
             title="Apagar" 
             variant="danger" 
-            onPress={handleDelete} 
+            onPress={() => deleteMutation.mutate()} 
             className="mb-4" 
-            disabled={isLoading} 
+            disabled={isScreenLoading} 
           />
         )}
         <Button 
           title={isEditing ? "Salvar Alterações" : "Criar Tarefa"} 
           variant="primary" 
-          onPress={isEditing ? handleEdit : handleCreate}
-          disabled={isLoading}
+          onPress={handleSave}
+          disabled={isScreenLoading}
         />
       </View>
     </View>

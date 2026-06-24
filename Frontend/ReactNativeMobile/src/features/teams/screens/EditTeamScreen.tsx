@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { useNavigation, NavigationProp, useRoute, RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../../../routes'; 
+import type { RootStackParamList } from '../../../routes'; 
 import { Header } from '../../../components/Header';
 import { Input } from '../../../components/Input';
 import { Button } from '../../../components/Button';
 import { teamsService } from '../../../services/teamService';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const TEAM_COLORS = [
   '#FACC15',
@@ -19,75 +20,46 @@ const TEAM_COLORS = [
 ];
 
 export function EditTeamScreen() {
+  const queryClient = useQueryClient();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'EditTeam'>>();
   const { id } = route.params ?? {};
   
   const [name, setName] = useState('');
   const [colorHex, setColorHex] = useState(TEAM_COLORS[0]); 
-  const [isLoading, setIsLoading] = useState(false);
+
+  const { data: team, isLoading: isLoadingTeam } = useQuery({
+    queryKey: ['team', id],
+    queryFn: () => teamsService.getById(id!),
+    enabled: !!id
+  });
 
   useEffect(() => {
-    fetchTeamDetails();
-  }, [id]);
-
-  async function fetchTeamDetails() {
-      setIsLoading(true);
-      if (!id) return;
-
-      try {
-        const team = await teamsService.getById(id);
-        setName(team.name);
-        if (team.colorHex) {
-          setColorHex(team.colorHex);
-        }
-        setIsLoading(false);
-
-      } catch (error) {
-        Alert.alert('Erro', 'Não foi possível carregar os dados do time.');
-        navigation.goBack();
-      } finally {
-        setIsLoading(false);
-      }
+    if (team) {
+      setName(team.name);
+      if (team.colorHex) setColorHex(team.colorHex);
     }
+  }, [team]);
 
-  async function handleSave() {
-    if (!name.trim()) {
-      return Alert.alert('Aviso', 'Por favor, informe o nome do time.');
-    }
-
-    if (!id) {
-      return Alert.alert('Erro', 'ID do time não encontrado.');
-    }
-
-    try {
-      setIsLoading(true);
-      await teamsService.update(id, { 
-        name,
-        colorHex
-      });
-      
+  const updateMutation = useMutation({
+    mutationFn: (data: { name: string, colorHex: string }) => teamsService.update(id!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
       navigation.goBack();
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível atualizar o time.');
-    } finally {
-      setIsLoading(false);
-    }
-  }
+    },
+    onError: () => Alert.alert('Erro', 'Não foi possível atualizar o time.')
+  });
 
-  async function handleDelete() {
-    try {
-      setIsLoading(true);
-      await teamsService.delete(id);
+  const deleteMutation = useMutation({
+    mutationFn: () => teamsService.delete(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
       navigation.goBack();
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível deletar o time.');
-    } finally {
-      setIsLoading(false);
-    }
-  }
+    },
+    onError: () => Alert.alert('Erro', 'Não foi possível deletar o time.')
+  });
 
-  if (isLoading) {
+  if (isLoadingTeam) {
     return (
       <View className="flex-1 bg-gray-900 items-center justify-center">
         <ActivityIndicator size="large" color="#3B82F6" />
@@ -146,11 +118,11 @@ export function EditTeamScreen() {
             variant="outline" 
             onPress={() => {
               if (id) {
-                navigation.navigate('Tasks', { teamId: id, teamName: name });
+                navigation.navigate('Tasks', { teamId: id });
               } else {
                 Alert.alert('Aviso', 'Não foi possível encontrar o ID do time.');
-            }
-        }}
+              }
+            }}
           />
         </View>
 
@@ -158,19 +130,18 @@ export function EditTeamScreen() {
           <Button 
             title="Deletar" 
             variant="danger" 
-            onPress={handleDelete}
-            disabled={isLoading}
+            onPress={() => deleteMutation.mutate()}
+            disabled={deleteMutation.isPending || updateMutation.isPending}
           />
         </View>
 
         <Button 
-          title={isLoading ? "Salvando..." : "Salvar"} 
+          title={updateMutation.isPending ? "Salvando..." : "Salvar"} 
           variant="primary" 
-          onPress={handleSave}
-          disabled={isLoading}
+          onPress={() => updateMutation.mutate({ name, colorHex })}
+          disabled={updateMutation.isPending || deleteMutation.isPending}
         />
       </View>
     </View>
   );
 }
-

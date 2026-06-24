@@ -1,37 +1,23 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { View, FlatList, ActivityIndicator, Alert, Text } from 'react-native';
 import { Header } from '../../../components/Header';
 import { Button } from '../../../components/Button';
 import { Input } from '../../../components/Input';
 import { TeamCard } from '../components/TeamCard';
-import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
-import { RootStackParamList } from '../../../routes';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+import type { RootStackParamList } from '../../../routes';
 import { teamsService, Team } from '../../../services/teamService';
+import { useQuery } from '@tanstack/react-query';
 
 export function TeamScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  async function fetchTeams(search = '') {
-    try {
-      setIsLoading(true);
-      const data = await teamsService.getTeams(search);
-      setTeams(data);
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível carregar os times.');
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchTeams(searchQuery);
-    }, [searchQuery])
-  );
+  const { data: teams = [], isLoading } = useQuery({
+    queryKey: ['teams', debouncedSearch],
+    queryFn: () => teamsService.getTeams(debouncedSearch)
+  });
 
   const renderTeamCard = ({ item }: { item: Team }) => (
     <TeamCard
@@ -53,7 +39,7 @@ export function TeamScreen() {
             placeholder="Buscar time por nome..."
             value={searchQuery}
             onChangeText={setSearchQuery}
-            onSubmitEditing={() => fetchTeams(searchQuery)}
+            onSubmitEditing={() => setDebouncedSearch(searchQuery)}
           />
         </View>
       </View>
