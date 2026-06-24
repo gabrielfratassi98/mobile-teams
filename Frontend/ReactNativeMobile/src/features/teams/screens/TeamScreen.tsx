@@ -1,18 +1,25 @@
-import React, { useState } from 'react';
-import { View, FlatList, ActivityIndicator, Alert, Text } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, FlatList, ActivityIndicator, Text } from 'react-native';
 import { Header } from '../../../components/Header';
 import { Button } from '../../../components/Button';
 import { Input } from '../../../components/Input';
 import { TeamCard } from '../components/TeamCard';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
 import type { RootStackParamList } from '../../../routes';
 import { teamsService, Team } from '../../../services/teamService';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function TeamScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useFocusEffect(
+    useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+    }, [queryClient])
+  );
 
   const { data: teams = [], isLoading } = useQuery({
     queryKey: ['teams', debouncedSearch],
@@ -72,7 +79,7 @@ export function TeamScreen() {
           variant="outline"
           onPress={() => navigation.navigate("Tasks")}
         />
-        
+
         <Button
           title="Criar novo time"
           variant="primary"

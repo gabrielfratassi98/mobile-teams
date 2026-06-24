@@ -38,7 +38,7 @@ Representa uma equipe de trabalho.
 
 | Campo       | Tipo         |
 | ----------- | ------------ |
-| id          | Integer      |
+| id          | String(uuid) |
 | name        | String       |
 | description | String       |
 | color       | String (HEX) |
@@ -50,7 +50,7 @@ Representa uma atividade a ser executada.
 
 | Campo       | Tipo     |
 | ----------- | -------- |
-| id          | Integer  |
+| id          | String(uuid) |
 | title       | String   |
 | description | String   |
 | status      | Enum     |

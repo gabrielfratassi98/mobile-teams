@@ -123,23 +123,26 @@ export class TeamService {
       where: {
         teams: {
           some: {
-            id: id
+            id
           }
         }
+      },
+      include: {
+        teams: true
       }
     });
 
-    if (!tasks || tasks.length === 0) { 
-      return { 
-        success: false, 
+    if (!tasks || tasks.length === 0) {
+      return {
+        success: false,
         code: 404,
         message: "Nenhuma tarefa encontrada para este time"
       };
     }
 
-    return { 
-      success: true, 
-      data: tasks 
+    return {
+      success: true,
+      data: tasks
     };
   }
 }

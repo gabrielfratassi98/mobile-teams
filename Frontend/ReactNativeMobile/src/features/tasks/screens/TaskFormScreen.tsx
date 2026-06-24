@@ -95,20 +95,19 @@ export function TaskFormScreen() {
     });
   }
 
-  function handleSave() {
-    const payload: any = {
-      title,
-      description,
-      status: selectedStatus,
-      teamIds: selectedTeams
-    };
+function handleCreate() {
+  const payload: any = {
+    title,
+    description,
+    teamIds: [...selectedTeams]
+  };
 
-    if (isEditing) {
-      updateMutation.mutate(payload);
-    } else {
-      createMutation.mutate(payload);
-    }
+  if (selectedStatus) {
+    payload.status = selectedStatus;
   }
+
+  createMutation.mutate(payload);
+}
 
   const isScreenLoading = isLoadingTeams || isLoadingTask || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
@@ -204,7 +203,7 @@ export function TaskFormScreen() {
         <Button 
           title={isEditing ? "Salvar Alterações" : "Criar Tarefa"} 
           variant="primary" 
-          onPress={handleSave}
+          onPress={handleCreate}
           disabled={isScreenLoading}
         />
       </View>

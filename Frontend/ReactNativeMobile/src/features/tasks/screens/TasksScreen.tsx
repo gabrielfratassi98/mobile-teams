@@ -1,18 +1,28 @@
-import React from 'react';
-import { View, FlatList, ActivityIndicator, Text } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, FlatList, ActivityIndicator } from 'react-native';
 import { Header } from '../../../components/Header';
 import { TaskCard } from '../components/TaskCard';
-import { useNavigation, NavigationProp, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, NavigationProp, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import type { RootStackParamList } from '../../../routes'; 
 import { tasksService } from '../../../services/taskService';
 import { teamsService } from '../../../services/teamService';
 import { Button } from '../../../components/Button';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function TasksScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'Tasks'>>();
   const { teamId } = route.params ?? {};
+  const queryClient = useQueryClient();
+
+  useFocusEffect(
+    useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      if (teamId) {
+        queryClient.invalidateQueries({ queryKey: ['team', teamId] });
+      }
+    }, [queryClient, teamId])
+  );
 
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ['tasks', teamId],
