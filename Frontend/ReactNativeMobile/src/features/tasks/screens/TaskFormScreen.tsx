@@ -1,4 +1,3 @@
-// Frontend/ReactNativeMobile/src/features/tasks/screens/TaskFormScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, Alert, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
@@ -23,7 +22,7 @@ export function TaskFormScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'TasksForm'>>();
   const id = route.params?.id;
   const isEditing = !!id;
-  
+
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [title, setTitle] = useState('');
@@ -45,6 +44,7 @@ export function TaskFormScreen() {
       setTitle(task.title);
       setDescription(task.description || "");
       setSelectedStatus(task.status);
+
       if (task.teams && task.teams.length > 0) {
         setSelectedTeams(task.teams.map((t: Team) => t.id));
       }
@@ -54,7 +54,7 @@ export function TaskFormScreen() {
   const createMutation = useMutation({
     mutationFn: (payload: any) => tasksService.create(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'], exact: false });
       navigation.goBack();
     },
     onError: () => {
@@ -65,7 +65,7 @@ export function TaskFormScreen() {
   const updateMutation = useMutation({
     mutationFn: (payload: any) => tasksService.update(id!, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['task', id] });
       navigation.goBack();
     },
@@ -77,7 +77,7 @@ export function TaskFormScreen() {
   const deleteMutation = useMutation({
     mutationFn: () => tasksService.delete(id!),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'], exact: false });
       navigation.goBack();
     },
     onError: () => {
@@ -89,33 +89,45 @@ export function TaskFormScreen() {
     setSelectedTeams(prev => {
       if (prev.includes(teamId)) {
         return prev.filter(tid => tid !== teamId);
-      } else {
-        return [...prev, teamId];
       }
+      return [...prev, teamId];
     });
   }
 
-function handleCreate() {
+function handleSave() {
+  if (!title.trim()) {
+    Alert.alert("Erro", "Informe o título da tarefa");
+    return;
+  }
+
   const payload: any = {
     title,
     description,
-    teamIds: [...selectedTeams]
+    status: selectedStatus || 'Pendente',
+    teamIds: selectedTeams
   };
 
-  if (selectedStatus) {
-    payload.status = selectedStatus;
+  if (isEditing) {
+    if (!id) return;
+    updateMutation.mutate(payload);
+    return;
   }
 
   createMutation.mutate(payload);
 }
 
-  const isScreenLoading = isLoadingTeams || isLoadingTask || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+  const isScreenLoading =
+    isLoadingTeams ||
+    isLoadingTask ||
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    deleteMutation.isPending;
 
   return (
     <View className="flex-1 bg-gray-900 px-6">
-      <Header 
-        title={isEditing ? "Editar tarefa" : "Nova tarefa"} 
-        subtitle="Gerenciar as tarefas" 
+      <Header
+        title={isEditing ? "Editar tarefa" : "Nova tarefa"}
+        subtitle="Gerenciar as tarefas"
       />
 
       {isScreenLoading ? (
@@ -124,25 +136,30 @@ function handleCreate() {
         </View>
       ) : (
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-          
-          <Text className="text-gray-300 text-sm font-semibold mb-2">Título da Tarefa</Text>
-          <Input 
-            placeholder="Ex: Atualizar layout..." 
-            value={title} 
+          <Text className="text-gray-300 text-sm font-semibold mb-2">
+            Título da Tarefa
+          </Text>
+
+          <Input
+            placeholder="Ex: Atualizar layout..."
+            value={title}
             onChangeText={setTitle}
           />
 
-          <Text className="text-gray-300 text-sm font-semibold mt-4 mb-2">Descrição</Text>
-          <Input 
+          <Text className="text-gray-300 text-sm font-semibold mt-4 mb-2">
+            Descrição
+          </Text>
+
+          <Input
             value={description}
             onChangeText={setDescription}
-            placeholder="Detalhes da tarefa..." 
-            className="h-32 text-left"
-            multiline
-            textAlignVertical="top"
+            placeholder="Detalhes da tarefa..."
           />
 
-          <Text className="text-gray-300 text-sm font-semibold mt-4 mb-3">Status</Text>
+          <Text className="text-gray-300 text-sm font-semibold mt-4 mb-3">
+            Status
+          </Text>
+
           <View className="bg-gray-800 rounded-lg mb-4 border border-gray-700">
             <Picker
               selectedValue={selectedStatus}
@@ -152,18 +169,26 @@ function handleCreate() {
             >
               <Picker.Item label="Selecione um status" value="" />
               {MOCK_STATUS.map((status) => (
-                <Picker.Item key={status.id} label={status.label} value={status.id} />
+                <Picker.Item
+                  key={status.id}
+                  label={status.label}
+                  value={status.id}
+                />
               ))}
             </Picker>
           </View>
 
-          <Text className="text-gray-300 text-sm font-semibold mt-4 mb-3">Vincular Times (Múltipla escolha)</Text>
+          <Text className="text-gray-300 text-sm font-semibold mt-4 mb-3">
+            Vincular Times
+          </Text>
+
           <View className="bg-gray-800 p-4 rounded-lg border border-gray-700 mb-8">
             {teams.length === 0 ? (
               <Text className="text-gray-500">Nenhum time cadastrado.</Text>
             ) : (
               teams.map((team: Team) => {
                 const isSelected = selectedTeams.includes(team.id);
+
                 return (
                   <TouchableOpacity
                     key={team.id}
@@ -171,14 +196,23 @@ function handleCreate() {
                     activeOpacity={0.7}
                     className="flex-row items-center py-2"
                   >
-                    <View 
+                    <View
                       className={`w-6 h-6 rounded border items-center justify-center mr-3 ${
-                        isSelected ? 'bg-emerald-500 border-emerald-500' : 'bg-transparent border-gray-500'
+                        isSelected
+                          ? 'bg-emerald-500 border-emerald-500'
+                          : 'bg-transparent border-gray-500'
                       }`}
                     >
-                      {isSelected && <Text className="text-white font-bold text-xs">✓</Text>}
+                      {isSelected && (
+                        <Text className="text-white font-bold text-xs">✓</Text>
+                      )}
                     </View>
-                    <Text className={`text-base ${isSelected ? 'text-white' : 'text-gray-400'}`}>
+
+                    <Text
+                      className={`text-base ${
+                        isSelected ? 'text-white' : 'text-gray-400'
+                      }`}
+                    >
                       {team.name}
                     </Text>
                   </TouchableOpacity>
@@ -186,24 +220,24 @@ function handleCreate() {
               })
             )}
           </View>
-
         </ScrollView>
       )}
 
       <View className="pb-8 pt-4 bg-gray-900 border-t border-gray-800">
         {isEditing && (
-          <Button 
-            title="Apagar" 
-            variant="danger" 
-            onPress={() => deleteMutation.mutate()} 
-            className="mb-4" 
-            disabled={isScreenLoading} 
+          <Button
+            title="Apagar"
+            variant="danger"
+            onPress={() => deleteMutation.mutate()}
+            className="mb-4"
+            disabled={isScreenLoading}
           />
         )}
-        <Button 
-          title={isEditing ? "Salvar Alterações" : "Criar Tarefa"} 
-          variant="primary" 
-          onPress={handleCreate}
+
+        <Button
+          title={isEditing ? "Salvar Alterações" : "Criar Tarefa"}
+          variant="primary"
+          onPress={handleSave}
           disabled={isScreenLoading}
         />
       </View>
