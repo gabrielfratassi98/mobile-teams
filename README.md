@@ -304,6 +304,112 @@ npm run android
 
 ---
 
+# 📖 Documentação de Rotas da API
+
+**URL Base:** `/api`
+
+---
+
+## 👥 Contexto: Equipas (Teams)
+
+### 1. Criar uma Equipa
+- **Método:** `POST`
+- **Endpoint:** `/api/teams`
+- **Body (JSON):**
+    ```json
+    {
+      "name": "Nome da Equipa",
+      "colorHex": "#FF0000",
+      "description": "Descrição opcional"
+    }
+    ```
+
+### 2. Listar Equipas
+- **Método:** `GET`
+- **Endpoint:** `/api/teams`
+- **Query Parameters:**
+  - `limit` (opcional): Quantidade máxima de registos a retornar (padrão: 10).
+  - `offset` (opcional): Quantidade de registos a saltar para paginação (padrão: 0).
+  - `search` (opcional): Termo para busca por nome.
+
+### 3. Obter Equipa por ID
+- **Método:** `GET`
+- **Endpoint:** `/api/teams/:id`
+
+### 4. Obter Tarefas de uma Equipa
+- **Método:** `GET`
+- **Endpoint:** `/api/teams/:id/tasks`
+
+### 5. Atualizar uma Equipa
+- **Método:** `PUT`
+- **Endpoint:** `/api/teams/:id`
+- **Body (JSON):**
+    ```json
+    {
+      "name": "Novo Nome",
+      "colorHex": "#00FF00",
+      "description": "Nova descrição"
+    }
+    ```
+
+### 6. Eliminar uma Equipa
+- **Método:** `DELETE`
+- **Endpoint:** `/api/teams/:id`
+
+---
+
+## 📝 Contexto: Tarefas (Tasks)
+
+### 1. Criar uma Tarefa
+- **Método:** `POST`
+- **Endpoint:** `/api/tasks`
+- **Body (JSON):**
+    ```json
+    {
+      "title": "Título da tarefa",
+      "description": "Descrição detalhada",
+      "status": "pending", 
+      "dueDate": "2026-12-31T23:59:59Z", 
+      "teamIds": ["id-da-equipa-1"] 
+    }
+    ```
+
+### 2. Listar Tarefas
+- **Método:** `GET`
+- **Endpoint:** `/api/tasks`
+- **Query Parameters:**
+  - `limit` (opcional): Quantidade máxima de registos a retornar (padrão: 10).
+  - `offset` (opcional): Quantidade de registos a saltar para paginação (padrão: 0).
+  - `search` (opcional): Termo para busca no título ou descrição.
+  - `teamId` (opcional): Filtrar pelas tarefas de uma equipa específica.
+  - `status` (opcional): Filtrar pelo estado (ex: "pending", "completed").
+  - `sort` (opcional): Ordem da listagem (`asc` ou `desc`).
+
+### 3. Obter Tarefa por ID
+- **Método:** `GET`
+- **Endpoint:** `/api/tasks/:id`
+
+### 4. Atualizar uma Tarefa
+- **Método:** `PUT`
+- **Endpoint:** `/api/tasks/:id`
+- **Body (JSON):**
+    ```json
+    {
+      "title": "Novo Título",
+      "status": "completed"
+    }
+    ```
+
+### 5. Eliminar uma Tarefa
+- **Método:** `DELETE`
+- **Endpoint:** `/api/tasks/:id`
+
+### 6. Desvincular Equipa de uma Tarefa
+- **Método:** `DELETE`
+- **Endpoint:** `/api/tasks/:taskId/teams/:teamId`
+
+---
+
 # 🚀 Evoluções Futuras
 
 Caso o projeto evoluísse para um ambiente de produção, as prioridades seriam:
