@@ -310,21 +310,21 @@ npm run android
 
 ---
 
-## 👥 Contexto: Equipas (Teams)
+## 👥 Contexto: equipes (Teams)
 
-### 1. Criar uma Equipa
+### 1. Criar uma equipe
 - **Método:** `POST`
 - **Endpoint:** `/api/teams`
 - **Body (JSON):**
     ```json
     {
-      "name": "Nome da Equipa",
+      "name": "Nome da equipe",
       "colorHex": "#FF0000",
       "description": "Descrição opcional"
     }
     ```
 
-### 2. Listar Equipas
+### 2. Listar equipes
 - **Método:** `GET`
 - **Endpoint:** `/api/teams`
 - **Query Parameters:**
@@ -332,15 +332,15 @@ npm run android
   - `offset` (opcional): Quantidade de registos a saltar para paginação (padrão: 0).
   - `search` (opcional): Termo para busca por nome.
 
-### 3. Obter Equipa por ID
+### 3. Obter equipe por ID
 - **Método:** `GET`
 - **Endpoint:** `/api/teams/:id`
 
-### 4. Obter Tarefas de uma Equipa
+### 4. Obter Tarefas de uma equipe
 - **Método:** `GET`
 - **Endpoint:** `/api/teams/:id/tasks`
 
-### 5. Atualizar uma Equipa
+### 5. Atualizar uma equipe
 - **Método:** `PUT`
 - **Endpoint:** `/api/teams/:id`
 - **Body (JSON):**
@@ -352,7 +352,7 @@ npm run android
     }
     ```
 
-### 6. Eliminar uma Equipa
+### 6. Eliminar uma equipe
 - **Método:** `DELETE`
 - **Endpoint:** `/api/teams/:id`
 
@@ -370,7 +370,7 @@ npm run android
       "description": "Descrição detalhada",
       "status": "pending", 
       "dueDate": "2026-12-31T23:59:59Z", 
-      "teamIds": ["id-da-equipa-1"] 
+      "teamIds": ["id-da-equipe-1"] 
     }
     ```
 
@@ -381,7 +381,7 @@ npm run android
   - `limit` (opcional): Quantidade máxima de registos a retornar (padrão: 10).
   - `offset` (opcional): Quantidade de registos a saltar para paginação (padrão: 0).
   - `search` (opcional): Termo para busca no título ou descrição.
-  - `teamId` (opcional): Filtrar pelas tarefas de uma equipa específica.
+  - `teamId` (opcional): Filtrar pelas tarefas de uma equipe específica.
   - `status` (opcional): Filtrar pelo estado (ex: "pending", "completed").
   - `sort` (opcional): Ordem da listagem (`asc` ou `desc`).
 
@@ -404,7 +404,7 @@ npm run android
 - **Método:** `DELETE`
 - **Endpoint:** `/api/tasks/:id`
 
-### 6. Desvincular Equipa de uma Tarefa
+### 6. Desvincular equipe de uma Tarefa
 - **Método:** `DELETE`
 - **Endpoint:** `/api/tasks/:taskId/teams/:teamId`
 
